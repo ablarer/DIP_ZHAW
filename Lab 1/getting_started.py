@@ -1,5 +1,4 @@
 import os
-# import cv2
 from pathlib import Path
 
 import matplotlib.animation as animation
@@ -323,7 +322,7 @@ plt.show()
 # -------------------------------------------------- Experimental Animations -------------------------------------------
 
 # *******Let the following run in the terminal*********
-# use python3 getting_started.py
+# use python3 3.1 Histogram and getting_started.py
 # Close one window view after the other to see the next visualization
 
 # animated_line_plot.py
@@ -363,7 +362,7 @@ plt.show()
 # -------------------------------------------------- Experimental Animations -------------------------------------------
 
 # *******Let the following run in the terminal*********
-# use python3 getting_started.py
+# use python3 3.1 Histogram and getting_started.py
 # Close one window view after the other to see the next visualization
 
 # shows a sort of volcano lamp
@@ -401,7 +400,7 @@ plt.show()
 # -------------------------------------------------- Experimental Animations -------------------------------------------
 
 # *******Let the following run in the terminal*********
-# use python3 getting_started.py
+# use python3 3.1 Histogram and getting_started.py
 # Close one window view after the other to see the next visualization
 
 # initializing a figure
