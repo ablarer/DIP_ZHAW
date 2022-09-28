@@ -236,7 +236,7 @@ plt.imshow(uint8Image)
 # ---convert to uint8 with normalizing----
 # prevent over/under flow of values
 # Another problem occurred:
-# Because of the uint8 format information is lost due to the mathematical calculations
+# Because of the uint8 format, information is lost due to the mathematical calculations
 info = np.iinfo(pixelArray.dtype)
 print(f'Info {info}')
 rawData = pixelArray.astype(np.float64) / info.max
@@ -282,17 +282,17 @@ save_images('All transversal medical images')
 plt.show()
 
 # Take the transversally stacked pictures and arrange them also sagittally and frontally
-brain3DArrayFrontal = np.stack(brain3DArrayTraversal, -1)
-brain3DArraySagital = np.stack(brain3DArrayFrontal, 1)
+brain3DArrayFrontal = np.stack(brain3DArrayTraversal, -1) # Stack column-wise
+brain3DArraySagital = np.stack(brain3DArrayFrontal, 1)  # Stack row-wise
 
 # Combine all images
 combinedImagesTraversal = [[0] * 256] * 256
-combinedImagesFrontal = [[0] * 20] * 256
-combinedImagesSagital = [[0] * 20] * 256
+combinedImagesFrontal   = [[0] * 20] * 256
+combinedImagesSagital   = [[0] * 20] * 256
 
 for brainImage in brain3DArrayTraversal:  # brain image = 2D Array -> [x][y] pixelwert-array
     combinedImagesTraversal += brainImage * (
-            1 / len(brain3DArrayTraversal))  # 1/20 of pixel value and add -> this results in average pixel value
+            1 / len(brain3DArrayTraversal))  # 1/20 of pixel value and add -> This results in average pixel value
 
 for brainImage in brain3DArrayFrontal:
     combinedImagesFrontal += brainImage * (1 / len(brain3DArrayFrontal))

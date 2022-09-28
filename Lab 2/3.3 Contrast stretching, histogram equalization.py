@@ -131,7 +131,6 @@ def histogramEqualization1(myUint8, myHistogram):
 
     return newImage
 
-
 # ---------------------------------Show the images----------------------------------------
 
 def showTheImages(myUint8, newImage):
@@ -148,16 +147,20 @@ def showTheImages(myUint8, newImage):
 
 
 def showHistogram(uint8Image, newImage, histogramArray):
-    plt.subplot(1, 3, 1)
+    plt.subplot(2, 2, 1)
     plt.imshow(uint8Image, cmap='gray')
     plt.title(extractFileName(path))
-    plt.subplot(1, 3, 2)
+    plt.subplot(2, 2, 2)
     plt.imshow(newImage, cmap='gray')
     plt.title('Histogram equalized\n' + 'Image')
-    plt.subplot(1, 3, 3)
+    plt.subplot(2, 2, 3)
     xList = range(len(histogramArray))
     plt.bar(xList, height=histogramArray)
     plt.title("Histogram")
+    plt.subplot(2, 2, 4)
+    xList = range(len(histogramArray))
+    plt.bar(xList, height=histogramArray)
+    plt.title("Histogram equalized")
     plt.tight_layout()
     save_image(extractFileName(path))
     plt.show()
