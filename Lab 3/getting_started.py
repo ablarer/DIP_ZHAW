@@ -46,12 +46,14 @@ plt.show()
 
 # ----------------------------------------------Convert image at any type to uint8--------------------------------------
 
-def convert_any_type_to_uint8(picture):
-    info = np.iinfo(picture.dtype)  # Get the information of the incoming image type
-    picture = picture.astype(np.float64) / info.max  # normalize the data to 0 - 1
-    picture = 255 * picture  # Now scale by 255
-    picture = picture.astype(np.uint8)
-    return picture
+def convert_any_type_to_uint8(picture, target_type_min = 0, target_type_max = 255, target_type = np.uint8):
+    imin = picture.min()
+    imax = picture.max()
+
+    a = (target_type_max - target_type_min) / (imax - imin)
+    b = target_type_max - a * imax
+    new_img = (a * picture + b).astype(target_type)
+    return new_img
 
 # ---------------------------------------------------------Show pictures-------------------------------------------------
 
@@ -92,8 +94,20 @@ def gaussian_filter():
     return gaussian_filter
 
 # Laplace filter, sharpening image
-def laplace_filter():
-    laplace_filter = np.array([[0, -1, 0], [-1, 4, -1], [0, -1, 0]])
+def laplace1_filter():
+    # Add / subtract laplace filter to original image:
+    # Add if center matrix value is positive
+    # Substract if center matrix value is negative
+    # Diagonal neighbouring pixels are not considered
+    laplace_filter = np.array([[0, 1, 0], [1, -4, 1], [0, 1, 0]])
+    return laplace_filter
+
+def laplace2_filter():
+    # Add / subtract filter to original image:
+    # Add if center matrix value is positive
+    # Subtract if center matrix value is negative
+    # Diagonal neighbouring pixels are considered
+    laplace_filter = np.array([[1, 1, 1], [1, -8, 1], [1, 1, 1]])
     return laplace_filter
 
 # ---------------------------------------------------------Plot pictures & histograms----------------------------------------------
@@ -146,11 +160,11 @@ def plot_pict_and_hist(gray_pixels, filtered_1, filtered_2, title_one="Orignal",
 
 def average_and_gaussian_filters(gray_pixels):
     average_Image = signal.convolve2d(gray_pixels.astype(float), average_filter(), 'same')
-    average_Image = average_Image.astype(int)
+    average_Image = convert_any_type_to_uint8(average_Image)
     # print('Average image', average_Image)
 
     gaussian_image = signal.convolve2d(gray_pixels.astype(float), gaussian_filter(), 'same')
-    gaussian_image = gaussian_image.astype(int)
+    gaussian_image = convert_any_type_to_uint8(gaussian_image)
     # print('Gaussian image', gaussian_image)
 
     return average_Image, gaussian_image
@@ -165,23 +179,33 @@ def apply_high_pass_filter(picture_original, picture_two):
 
 # --------------------------------------------------------- Task 3.3 --------------------------------------------------
 
-def apply_laplace_filter(gray_pixels):
-    laplace_Image = signal.convolve2d(gray_pixels.astype(float), laplace_filter(), 'same')
-    laplace_Image = laplace_Image.astype(int)
+# w/o diag. pixels considered
+def apply_laplace_filter1(gray_pixels):
+    laplace_Image = signal.convolve2d(gray_pixels.astype(float), laplace1_filter(), 'same')
+    laplace_Image = convert_any_type_to_uint8(laplace_Image)
+    return laplace_Image
+
+# With diag. pixels considered
+def apply_laplace_filter2(gray_pixels):
+    laplace_Image = signal.convolve2d(gray_pixels.astype(float), laplace2_filter(), 'same')
+    laplace_Image = convert_any_type_to_uint8(laplace_Image)
     # print('Laplace image', laplace_Image)
 
     return laplace_Image
 
 def sharpen_image_1(gray_pixels, laplace_filtered_picture):
-    sharpend_image_1 = gray_pixels + laplace_filtered_picture
+    sharpend_image_1 = gray_pixels - laplace_filtered_picture
+    sharpend_image_1 = convert_any_type_to_uint8(sharpend_image_1)
     return sharpend_image_1
 
 def sharpen_image_2(gray_pixels, high_pass_filtered_picture):
-    sharpend_image_2 = gray_pixels + high_pass_filtered_picture
+    sharpend_image_2 = gray_pixels  + high_pass_filtered_picture
+    sharpend_image_2 = convert_any_type_to_uint8(sharpend_image_2)
     return sharpend_image_2
 
 def sharpen_image_3(gray_pixels, gaussian_Image):
     sharpend_image_3 = gray_pixels + gaussian_Image
+    sharpend_image_3 = convert_any_type_to_uint8(sharpend_image_3)
     return sharpend_image_3
 
 
@@ -219,30 +243,43 @@ if __name__ == '__main__':
     # Task 3.3
     # 3.3.1 + # 3.3.2
     gray_pixels = open_image('pics/ctSkull.tif')
-    laplace_filtered_picture = apply_laplace_filter(gray_pixels)
+    laplace_filtered_picture = apply_laplace_filter1(gray_pixels)
     average_image, gaussian_image = average_and_gaussian_filters(gray_pixels)
     high_passed_filtered_picture = apply_high_pass_filter(gray_pixels, average_image)
-    plot_pict_and_hist(gray_pixels, laplace_filtered_picture, high_passed_filtered_picture, "Gray Pixel", "Laplace Filter", "High Pass")
+    plot_pict_and_hist(gray_pixels, laplace_filtered_picture, high_passed_filtered_picture, "Gray Pixel", "Laplace Filter w/o diag. pixels", "High Pass")
 
     gray_pixels = open_image('pics/xRayChest.tif')
-    laplace_filtered_picture = apply_laplace_filter(gray_pixels)
+    laplace_filtered_picture = apply_laplace_filter1(gray_pixels)
     average_image, gaussian_image = average_and_gaussian_filters(gray_pixels)
     high_passed_filtered_picture = apply_high_pass_filter(gray_pixels, average_image)
-    plot_pict_and_hist(gray_pixels, laplace_filtered_picture, high_passed_filtered_picture, "Gray Pixel", "Laplace Filter", "High Pass")
+    plot_pict_and_hist(gray_pixels, laplace_filtered_picture, high_passed_filtered_picture, "Gray Pixel", "Laplace Filter w/o diag.  pixels", "High Pass")
 
     # 3.3.3
     # Sharpen image with high Laplace filter
+    # w/o diag. pixels considered
     gray_pixels = open_image('pics/ctSkull.tif')
-    laplace_filtered_picture = apply_laplace_filter(gray_pixels)
+    laplace_filtered_picture = apply_laplace_filter1(gray_pixels)
     sharpend_image_1 = sharpen_image_1(gray_pixels, laplace_filtered_picture)
-    plot_pict_and_hist(gray_pixels, laplace_filtered_picture, sharpend_image_1, "Gray Pixel", "Laplace Filter", "Sharpend Image")
+    plot_pict_and_hist(gray_pixels, laplace_filtered_picture, sharpend_image_1, "Gray Pixel", "Laplace Filter w/o diag. pixels", "Sharpend Image")
 
     gray_pixels = open_image('pics/xRayChest.tif')
-    laplace_filtered_picture = apply_laplace_filter(gray_pixels)
+    laplace_filtered_picture = apply_laplace_filter1(gray_pixels)
     sharpend_image_1 = sharpen_image_1(gray_pixels, laplace_filtered_picture)
-    plot_pict_and_hist(gray_pixels, laplace_filtered_picture, sharpend_image_1, "Gray Pixel", "Laplace Filter", "Sharpend Image")
+    plot_pict_and_hist(gray_pixels, laplace_filtered_picture, sharpend_image_1, "Gray Pixel", "Laplace Filter w/o diag. pixels", "Sharpend Image")
 
-    # 3.3.4
+    # Sharpen image with high Laplace filter
+    # with diagonal pixels considered
+    gray_pixels = open_image('pics/ctSkull.tif')
+    laplace_filtered_picture = apply_laplace_filter2(gray_pixels)
+    sharpend_image_1 = sharpen_image_1(gray_pixels, laplace_filtered_picture)
+    plot_pict_and_hist(gray_pixels, laplace_filtered_picture, sharpend_image_1, "Gray Pixel", "Laplace Filter with diag. pixels", "Sharpend Image")
+
+    gray_pixels = open_image('pics/xRayChest.tif')
+    laplace_filtered_picture = apply_laplace_filter2(gray_pixels)
+    sharpend_image_1 = sharpen_image_1(gray_pixels, laplace_filtered_picture)
+    plot_pict_and_hist(gray_pixels, laplace_filtered_picture, sharpend_image_1, "Gray Pixel", "Laplace Filter with diag. pixels", "Sharpend Image")
+
+
     # Sharpen image with high pass filter
     gray_pixels = open_image('pics/ctSkull.tif')
     average_image, gaussian_image = average_and_gaussian_filters(gray_pixels)
