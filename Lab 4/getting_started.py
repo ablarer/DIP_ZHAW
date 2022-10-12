@@ -208,6 +208,7 @@ def show_spectrum(freq):
     plt.imshow(convert_freq(freq))
 
 
+
 def crop_image(img, tol=0):
     # img is 2D image data
     # tol  is tolerance
