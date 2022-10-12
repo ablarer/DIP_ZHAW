@@ -49,7 +49,6 @@ plt.show()
 def convert_any_type_to_uint8(picture, target_type_min = 0, target_type_max = 255, target_type = np.uint8):
     imin = picture.min()
     imax = picture.max()
-
     a = (target_type_max - target_type_min) / (imax - imin)
     b = target_type_max - a * imax
     new_img = (a * picture + b).astype(target_type)
@@ -172,7 +171,8 @@ def average_and_gaussian_filters(gray_pixels):
 # --------------------------------------------------------- Task 3.2 --------------------------------------------------
 
 def apply_high_pass_filter(picture_original, picture_two):
-    high_passed_filtered_picture = picture_original - picture_two
+    high_passed_filtered_picture = picture_original + (picture_original - picture_two)
+    high_passed_filtered_picture = convert_any_type_to_uint8(high_passed_filtered_picture)
     # print('High pass image', high_passed_filtered_picture)
 
     return high_passed_filtered_picture
