@@ -54,6 +54,7 @@ brain = get_image_array(image_path_2)
 ctSkull = get_image_array(image_path_3)
 show_images(3, 500, [arterie, brain, ctSkull], title=True)
 
+#---------------------------------------Convert hsv to rgb--------------------------------------------------------------------
 
 def hsv2rgb(h, s, v):
     return tuple(round(i * 255) for i in hsv_to_rgb(h, s, v))
