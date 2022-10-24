@@ -3,8 +3,10 @@ import numpy as np
 from PIL import Image
 from random import randint
 import matplotlib.pyplot as plt
+from scipy import ndimage
 
-#----------------------------------------Open and convert Images to np.array--------------------------------------------
+
+# ----------------------------------------Open and convert Images to np.array--------------------------------------------
 
 def get_image_array(file_name, print_info=False):
     image = Image.open(file_name)
@@ -18,7 +20,8 @@ def get_image_array(file_name, print_info=False):
 
     return img
 
-#----------------------------------------Show Images---------------------------------------------------------------------
+
+# ----------------------------------------Show Images---------------------------------------------------------------------
 
 def show_images(num_cols, per_image_size_px, *image_arrays, cmap="viridis", title=False):
     num_rows = int(len(image_arrays) / num_cols) + 1
@@ -38,7 +41,7 @@ def show_images(num_cols, per_image_size_px, *image_arrays, cmap="viridis", titl
         plt.yticks([])
 
 
-#-----------------------------------------Show images--------------------------------------------------------------------
+# -----------------------------------------Show images--------------------------------------------------------------------
 
 blood_cells = get_image_array("pics/bloodCells.png", True)
 squares = get_image_array("pics/squares.tif", True)
@@ -46,7 +49,7 @@ show_images(2, 500, (squares, "Squares with sizes 1x1 to 15x15"), (blood_cells, 
 # plt.imshow(squares)
 plt.show()
 
-#----------------------------------Task 3.1 Locate and Squares of Given Size--------------------------------------------
+# ----------------------------------Task 3.1 Locate and Squares of Given Size--------------------------------------------
 squares = cv2.imread("pics/squares.tif", 0)
 print('Type of squares: ', type(squares))
 
@@ -55,7 +58,7 @@ plt.imshow(squares)
 plt.title('Original image')
 
 # Kernel defintion
-kernel = np.ones((6,6), np.uint8)
+kernel = np.ones((6, 6), np.uint8)
 
 # https://www.tutorialspoint.com/opencv/opencv_morphological_operations.htm
 # The morphologyEx() of the method of the class Imgproc is used to perform
@@ -69,7 +72,7 @@ plt.imshow(no_bigs)
 plt.title('Applied blur filter MORPH_TOPHAT')
 
 # Kernel definition
-kernel = np.ones((5,5), np.uint8)
+kernel = np.ones((5, 5), np.uint8)
 
 plt.subplot(2, 2, 3)
 # Erosion: Bright areas get smaller
@@ -88,7 +91,8 @@ plt.subplots_adjust(wspace=0.1,
                     hspace=0.5)
 plt.show()
 
-#-----------------------Count squares by using the concept of connected components--------------------------------------
+
+# -----------------------Count squares by using the concept of connected components--------------------------------------
 # Iterates of image and collects x- and y-coordinates of white pixels
 def find_white_pixel(img, white):
     result = None
@@ -147,7 +151,7 @@ img = result
 components = []
 
 # white = 255
-# Warum nicht so? while not find_white_pixel(img, 255) is None
+#: Entspricht_while not find_white_pixel(img, 255) is None
 while find_white_pixel(img, 255):
     px = find_white_pixel(img, 255)
     comp, img = fill_component(img, 1, *px)
@@ -159,11 +163,11 @@ plt.imshow(all_components)
 plt.title(f'{len(components)} squares of size 5x5 were found.')
 plt.show()
 
-#----------------------------------------------Task 3.2 Counting Blood Cells--------------------------------------------
+# ----------------------------------------------Task 3.2 Counting Blood Cells--------------------------------------------
 img = blood_cells
 plt.subplot(3, 2, 1)
-plt.imshow(img)
-plt.title('Original Image')
+plt.imshow(img, cmap='gray')
+plt.title('Original Image', fontsize = 11)
 
 # Segment foreground from background
 # cv2.THRESH_BINARY: "black" to black, "white" to white
@@ -171,8 +175,9 @@ threshold = 76
 ret, img_b = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
 
 plt.subplot(3, 2, 2)
-plt.imshow(img_b)
+plt.imshow(img_b, cmap='gray')
 plt.title('Foreground and background separated')
+
 
 # Remove border touching cells
 def _pad_with(vector, pad_width, iaxis, kwargs):
@@ -201,37 +206,64 @@ while not find_white_pixel(pixels_touching_border, 1) is None:
     pixels_touching_border = get_border_pixels(complete_cells)
 
 plt.subplot(3, 2, 3)
-plt.imshow(complete_cells)
-plt.title('Incomplete cells on the border removed')
-
+plt.imshow(complete_cells, cmap='gray')
+plt.title('Incomplete cells on the border removed', fontsize = 11)
 
 # Remove noise
 plt.subplot(3, 2, 4)
 kernel = np.ones((5, 5), np.uint8)
-closed = cv2.morphologyEx(complete_cells, cv2.MORPH_CLOSE, kernel)
-plt.imshow(closed)
-plt.title('Noise removed')
+closed = cv2.morphologyEx(complete_cells, cv2.MORPH_OPEN, kernel)
+plt.imshow(closed, cmap='gray')
+plt.title('Noise removed', fontsize = 11)
 
 # Close holes
 plt.subplot(3, 2, 5)
 kernel = np.ones((3, 3), np.uint8)
-rem_noise = cv2.morphologyEx(closed, cv2.MORPH_OPEN, kernel)
-plt.imshow(rem_noise)
-plt.title('Holes removed')
+rem_noise = cv2.morphologyEx(closed, cv2.MORPH_CLOSE, kernel)
+plt.imshow(rem_noise, cmap='gray')
+plt.title('Holes removed', fontsize = 11)
+
+# Label blood cells according to their size
+def label_per_size(input):
+    labels, label_sizes = np.unique(input, return_counts=True)
+    size_color = {}
+    hist_sizes = []
+
+    for i, label in enumerate(labels):
+        if label == 0:
+            continue
+        label_size = label_sizes[i]
+        if label_size not in size_color:
+            size_color[label_size] = -1 * i  # use minus value to avoid overlap
+
+        hist_sizes.append(label_size)
+        input = np.where(input == label, size_color[label_size], input)
+
+    return np.abs(input), hist_sizes
 
 
-# Color cells according to their size
-comp = find_components(rem_noise, 1)
-len(comp)
-all_components = add_all_arrays([c * randint(70, 255) for c in comp])
+# Count and label blood cells
+labelled_cell_pixels, labelled_cell_count = ndimage.label(rem_noise)
+labelled_cells_per_size_pixels, hist_sizes = label_per_size(labelled_cell_pixels)
 
+# Plot color labeled blood cells according to their size
 plt.subplot(3, 2, 6)
-plt.imshow(all_components)
-plt.title('Cells colored according to their size')
-
+comp = find_components(rem_noise, 1)
+length = len(comp)
+plt.imshow(np.array(labelled_cells_per_size_pixels))
+plt.title(f'Cells colored according to their size\nNumber of blood cells: {length}',fontsize = 11)
 
 plt.tight_layout()
 plt.subplots_adjust(wspace=0.1,
                     hspace=0.5)
 plt.show()
 
+
+# Plot histogram for number of occurrence for each blood cell size
+plt.subplot(1, 1, 1)
+plt.hist(hist_sizes, bins=len(hist_sizes))
+plt.title('Distribution of blood cell sizes in pixels')
+plt.xlabel('Blood cell size in pixels')
+plt.ylabel('Number of Occurrences ')
+plt.grid(True)
+plt.show()
