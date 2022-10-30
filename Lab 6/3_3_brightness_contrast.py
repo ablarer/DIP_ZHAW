@@ -69,7 +69,9 @@ def display_colorchannels(img, channel_names=("RED", "GREEN", "BLUE"), return_ch
 #-----------------------------------------------Load Image-------------------------------------------------------------
 image_path_1 = 'pics/landscape_1.png'
 landscape_1 = get_image_array(image_path_1)
-show_images(1, 1000, landscape_1)
+plt.imshow(landscape_1)
+plt.title('Landscape')
+plt.show()
 
 
 def gamma_correct(channel, gamma=1.0):
@@ -101,12 +103,20 @@ def show_gamma_range(img, low, high, steps):
             tests.append((new_img, f"gamma = {gamma_val}"))
 
     show_images(6, 300, *tests, cmap="gray", title=True)
+    """
+    fig = plt.figure(figsize=(2, 6))
+    for tests in range(1, 9, 1):
+        fig.add_subplot(6, 2, i)
+        plt.imshow(tests[tests], cmap="gray")
+    plt.title('Gamma Correction Series')
     plt.show()
+    """
 
 sw_img = rgb2gray(landscape_1)
 show_gamma_range(sw_img, 1, 3, 12)
 
 plt.imshow(gamma_correct(sw_img, 2.3), cmap="gray")
+plt.title('Gamma Corrected Image')
 plt.show()
 
 
@@ -162,12 +172,14 @@ overal_equ = landscape_1.copy()
 for ch_no in range(3):
     ch = overal_equ[:,:, ch_no]
     overal_equ[:,:, ch_no] = equalize_histogram(ch)
-
 show_images(1, 1000, overal_equ)
+plt.imshow(overal_equ)
+plt.title('Overall equalized histogram')
+plt.show()
 
 
 # Color change quiet a bit
-# Convert to HSV, Equalize the Value Channel and back to rgb
+# Convert to HSV, equalize the Value Channel and back to rgb
 HSV_landscape = cv2.cvtColor(landscape_1, cv2.COLOR_RGB2HSV)
 
 equ_val = equalize_histogram(HSV_landscape[:,:,2])
@@ -176,7 +188,9 @@ show_images(2, 800, HSV_landscape[:,:,2], equ_val, cmap="gray")
 HSV_landscape[:,:,2] = equ_val
 
 show_images(1, 1000, cv2.cvtColor(HSV_landscape, cv2.COLOR_HSV2RGB))
-
+plt.imshow(overal_equ)
+plt.title('')
+plt.show()
 
 # Also Equalize hue channel
 equ_h = equalize_histogram(HSV_landscape[:,:,0])
