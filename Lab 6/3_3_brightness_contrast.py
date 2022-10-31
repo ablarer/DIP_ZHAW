@@ -95,42 +95,39 @@ def show_gamma_range(img, low, high, steps):
         for gamma_val in np.arange(low, 1, low_steps):
             gamma_val = round(gamma_val, 2)
             new_img = gamma_correct(img, gamma_val)
-            tests.append((new_img, f"gamma = {gamma_val}"))
+            tests.append((new_img, f"gamma = {gamma_val:.2f}"))
 
     if high > 1:
         for gamma_val in np.arange(1, high, high_steps):
             new_img = gamma_correct(img, gamma_val)
-            tests.append((new_img, f"gamma = {gamma_val}"))
+            tests.append((new_img, f"gamma = {gamma_val:.2f}"))
+
 
     show_images(6, 300, *tests, cmap="gray", title=True)
-    """
-    fig = plt.figure(figsize=(2, 6))
-    for tests in range(1, 9, 1):
-        fig.add_subplot(6, 2, i)
-        plt.imshow(tests[tests], cmap="gray")
-    plt.title('Gamma Correction Series')
-    plt.show()
-    """
 
+# Calculate and show same images with different gamma values
 sw_img = rgb2gray(landscape_1)
 show_gamma_range(sw_img, 1, 3, 12)
 
+# Apply manually chosen gamma correction on greyscale image
 plt.imshow(gamma_correct(sw_img, 2.3), cmap="gray")
-plt.title('Gamma Corrected Image')
+plt.title('Gamma Corrected BW-Image, gamma = 2.3')
 plt.show()
 
 
-# Adjust gamma on all channels
+# Adjust gamma on all channels on RGB Image
 adjusted_overall_gamma = gamma_correct(landscape_1, 2.3)
-show_images(1, 1000, adjusted_overall_gamma)
+plt.title('Gamma Corrected Image on all Channels, gamma = 2.3')
+plt.imshow(adjusted_overall_gamma)
+plt.show()
 
-
-# Adjust gamma on single channel
+# Adjust gamma on single channel on RGB Image
 channel_to_correct = 0
 adj_single_ch = landscape_1.copy()
 adj_single_ch[:,:,channel_to_correct] = gamma_correct(adj_single_ch[:,:,channel_to_correct], 2.3)
-show_images(1, 1000, adj_single_ch)
-
+plt.title('Gamma Corrected Image on one Channel, gamma = 2.3')
+plt.imshow(adj_single_ch)
+plt.show()
 
 # Histogram Adjustment Color Image
 def generate_histogram(img):
@@ -172,29 +169,28 @@ overal_equ = landscape_1.copy()
 for ch_no in range(3):
     ch = overal_equ[:,:, ch_no]
     overal_equ[:,:, ch_no] = equalize_histogram(ch)
-show_images(1, 1000, overal_equ)
 plt.imshow(overal_equ)
-plt.title('Overall equalized histogram')
+plt.title('Overall equalized histogram in a RGB image on all three channels')
 plt.show()
+# The colors change
 
-
-# Color change quiet a bit
-# Convert to HSV, equalize the Value Channel and back to rgb
+# Convert RGB to HSV and equalize v channel
 HSV_landscape = cv2.cvtColor(landscape_1, cv2.COLOR_RGB2HSV)
-
 equ_val = equalize_histogram(HSV_landscape[:,:,2])
-show_images(2, 800, HSV_landscape[:,:,2], equ_val, cmap="gray")
-
-HSV_landscape[:,:,2] = equ_val
-
-show_images(1, 1000, cv2.cvtColor(HSV_landscape, cv2.COLOR_HSV2RGB))
-plt.imshow(overal_equ)
-plt.title('')
+plt.imshow(equ_val, cmap="gray")
+plt.title('Overall equalized histogram (HSV image on the v channel).')
 plt.show()
 
-# Also Equalize hue channel
-equ_h = equalize_histogram(HSV_landscape[:,:,0])
+# Convert equalized HSV image on the v channel to RGB
+HSV_landscape[:,:,2] = equ_val
+plt.imshow(cv2.cvtColor(HSV_landscape, cv2.COLOR_HSV2RGB), cmap="gray")
+plt.title('Overall equalized histogram (HSV to RGB converted image on the v channel).')
+plt.show()
 
+# Equalize the hue channel on the v channel equalized HSV image
+equ_h = equalize_histogram(HSV_landscape[:,:,0])
 HSV_landscape[:,:,0] = equ_h
-show_images(1, 1000, cv2.cvtColor(HSV_landscape, cv2.COLOR_HSV2RGB))
+plt.imshow(cv2.cvtColor(HSV_landscape, cv2.COLOR_HSV2RGB), cmap="gray")
+plt.title('Overall equalized histogram (HSV image on the v and h channel).')
+plt.show()
 
