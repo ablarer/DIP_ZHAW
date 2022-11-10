@@ -62,16 +62,18 @@ def main():
     # Find peaks
     # peakCoords = foo  # <--
     peakCoords = peak_local_max(imageDistance, min_distance=20, threshold_abs=9, exclude_border=1)
-
+    print(peakCoords.shape)
     # Create a mask containing the seedpoints, 
     # mask = foo  # <--
-    # Make empty black image
-    # mask = np.zeros((imageDistance.shape[0], imageDistance.shape[1], 1), np.uint8)
-    mask = np.array((peakCoords[0], peakCoords[1], 1))
+    mask = np.zeros((imageBinary.shape[0], imageBinary.shape[1]), dtype=int)
+    print(mask[0][0])
+    for i in peakCoords:
+        mask[peakCoords[i][0], peakCoords[i][1]] = [0, 0, 255]
+    print('hallo')
+
     # mask[10, 5] = [0, 0, 255]
-    print(mask)
     # mask[foo] = True  # <--
-    mask[:, :, 1] = True
+    #  mask[:, :, 1] = True
 
     # Give the seedpoints different integer values they will be used to label the identified objects
     # Label all local maximums with different positive values starting from 1.
