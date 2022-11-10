@@ -65,7 +65,11 @@ def main():
 
     # Create a mask containing the seedpoints, 
     # mask = foo  # <--
+    # Make empty black image
+    # mask = np.zeros((imageDistance.shape[0], imageDistance.shape[1], 1), np.uint8)
     mask = np.array((peakCoords[0], peakCoords[1], 1))
+    # mask[10, 5] = [0, 0, 255]
+    print(mask)
     # mask[foo] = True  # <--
     mask[:, :, 1] = True
 
