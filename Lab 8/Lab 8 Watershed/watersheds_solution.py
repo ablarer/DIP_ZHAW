@@ -71,6 +71,7 @@ def main():
         mask[peakCoords[i][0], peakCoords[i][1]] = [0, 0, 255]
     print('hallo')
 
+
     # mask[10, 5] = [0, 0, 255]
     # mask[foo] = True  # <--
     #  mask[:, :, 1] = True
