@@ -66,13 +66,14 @@ def main():
     # Create a mask containing the seedpoints, 
     # mask = foo  # <--
     mask = np.zeros((imageBinary.shape[0], imageBinary.shape[1]), dtype=int)
-    print(mask[0][0])
     for i in peakCoords:
-        mask[peakCoords[i][0], peakCoords[i][1]] = [0, 0, 255]
-    print('hallo')
-
-
-    # mask[10, 5] = [0, 0, 255]
+        # mask[peakCoords[2][0], peakCoords[2][1]] = [0, 0, 255]
+        x = i[0]
+        y = i[1]
+        mask[i[0], i[1]] = 255
+    plt.imshow(mask, cmap='gray')
+    plt.title(f'Mask with with {peakCoords.shape[0]} max coordinates :', mask.shape)
+    plt.show()
     # mask[foo] = True  # <--
     #  mask[:, :, 1] = True
 
