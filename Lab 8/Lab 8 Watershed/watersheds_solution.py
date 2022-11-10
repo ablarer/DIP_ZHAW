@@ -52,36 +52,30 @@ def main():
     if len(image.shape) == 3:
         image = image[:, :, 0]
 
-    imageBinary = compute_binary_image_otsu(image, True)
+    imageBinary = compute_binary_image_otsu(image, False)
     foo = 0
     # imageDistance = foo  # <--
     # Compute Euclidean distance from every binary pixel
     # to the nearest zero pixel then find peaks
-    imageDistance = distance_transform_implementation_example(imageBinary, True)
+    imageDistance = distance_transform_implementation_example(imageBinary, False)
 
     # Find peaks
     # peakCoords = foo  # <--
-    peakCoords = peak_local_max(imageDistance, min_distance=20, threshold_abs=9, exclude_border=1)
-    print(peakCoords.shape)
+    # Find irretrievably the ideal min distance to separate the nuclei and hence the bacterial cells from each other
+    peakCoords = peak_local_max(imageDistance, min_distance=30)
+
     # Create a mask containing the seedpoints, 
     # mask = foo  # <--
     mask = np.zeros((imageBinary.shape[0], imageBinary.shape[1]), dtype=int)
-    for i in peakCoords:
-        # mask[peakCoords[2][0], peakCoords[2][1]] = [0, 0, 255]
-        x = i[0]
-        y = i[1]
-        mask[i[0], i[1]] = 255
-    plt.imshow(mask, cmap='gray')
-    plt.title(f'Mask with with {peakCoords.shape[0]} max coordinates :', mask.shape)
-    plt.show()
     # mask[foo] = True  # <--
-    #  mask[:, :, 1] = True
+    for i in peakCoords:
+        mask[i[0], i[1]] = 255
 
     # Give the seedpoints different integer values they will be used to label the identified objects
     # Label all local maximums with different positive values starting from 1.
     # So, in case we have 10 objects in the image each of them will be labeled with a value from 1 to 10.
     # seedMask, _ = foo  # <--
-    seedMask = ndi.label(peakCoords, mask)[0]
+    seedMask, _ = ndi.label(mask)
 
     # Watershed algorithm grows the regions around the seedpoints and labels them in a mask, the label is
     # determined by the seedpoint label
@@ -99,9 +93,11 @@ def main():
     ax[1].imshow(imageBinary, cmap=plt.cm.gray, interpolation='none')
     ax[1].set_title('Otsu: image_binary')
     ax[2].imshow(imageDistance / np.amax(imageDistance), cmap=plt.cm.jet, interpolation='none')
+    ax[2].set_title('Euclidean distance')
     ax[3].scatter(peakCoords[:, 1].reshape((-1,)), peakCoords[:, 0].reshape((-1,)), s=10, marker='o')
+    ax[3].set_title('Bacterial nuclei')
     ax[4].imshow(labels, cmap=plt.cm.nipy_spectral, interpolation='none')
-    ax[4].set_title('Separated objects')
+    ax[4].set_title('Separated bacterial cells')
 
     for a in ax:
         a.set_axis_off()
