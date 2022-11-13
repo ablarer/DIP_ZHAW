@@ -95,9 +95,9 @@ def main():
     ax[2].imshow(imageDistance / np.amax(imageDistance), cmap=plt.cm.jet, interpolation='none')
     ax[2].set_title('Euclidean distance')
     ax[3].scatter(peakCoords[:, 1].reshape((-1,)), peakCoords[:, 0].reshape((-1,)), s=10, marker='o')
-    ax[3].set_title('Bacterial nuclei')
+    ax[3].set_title('Yeast cell nuclei')
     ax[4].imshow(labels, cmap=plt.cm.nipy_spectral, interpolation='none')
-    ax[4].set_title('Separated bacterial cells')
+    ax[4].set_title('Separated yeast cells')
 
     for a in ax:
         a.set_axis_off()
