@@ -19,7 +19,10 @@ def display_image(image):
 
 def basic_thresholding(image, e):
     T0 = (image.max() + image.mean()) / 2
-    T0 = 190
+    # Estimate the threshold with help of the histogram
+    # Otherwise, one might get suboptimal results
+    # One will get best results for Otsu threshold
+    T0 = 195
     Tdiff = 10
     G1, G2 = 0,0
     while (Tdiff > e):
@@ -98,11 +101,11 @@ def my_otsu(image, n_bins, counts, bin_centers):
         total_ssds.append(left_ssd + right_ssd)
     # Threshold that minimizes the SSD k total in the bin z
     # Returns the index, i.e. the bin of the minimum value within the array
-    z = np.argmin(total_ssds)
-    print('The threshold value is in the middle of bin: ', z)
+    bin = np.argmin(total_ssds)
+    print('The threshold value is in the middle of bin: ', bin)
     # Otsu threshold within the bin z
-    threshold = bin_centers[z]
-    print(f'The Otsu threshold value in the middle of bin {z} is {threshold}.')
+    threshold = bin_centers[bin]
+    print(f'The Otsu threshold value in the middle of bin {bin} is {threshold}.')
     # Returns boolean values for pixels that are larger than the threshold
     # Make all pixels >= threshold black
     binary_image = image >= threshold
@@ -110,13 +113,13 @@ def my_otsu(image, n_bins, counts, bin_centers):
     from skimage.filters import threshold_otsu
     print("Otsu's Method: Output Threshold via skimage", threshold_otsu(image, 128))
 
-    return binary_image, threshold
+    return binary_image, threshold, bin
     # return binary_image, between_class_variance, threshold, separability
 
 def main():
     # Choose one of the images below
-    # image = "thGonz.tif"
-    image = "binary_test_image.png"
+    image = "thGonz.tif"
+    # image = "binary_test_image.png"
 
     image = open_image(image)
     display_image(image)
@@ -133,18 +136,19 @@ def main():
     print(G1.shape, G2.shape)
     fig, ax = plt.subplots(2,2)
     ax[0,0].set_title(str(T))
-    ax[0,0].imshow(G1)
+    ax[0,0].imshow(G1, cmap='gray')
     ax[0,1].hist(G1)
-    ax[1,0].imshow(G2)
+    ax[1,0].imshow(G2, cmap='gray')
     ax[1,1].hist(G2)
     G2[G2 > 0] = 1
     plt.figure()
     plt.imshow(G2, cmap='gray')
+    plt.title('Basic Threshold Method: Output Threshold: ' + str(T))
     plt.show()
 
 
     # Otsu thresholding method
-    binary_image, threshold = my_otsu(image, n_bins, counts, bin_centers)
+    binary_image, threshold, bin = my_otsu(image, n_bins, counts, bin_centers)
     plt.title("Otsu's Method: Output Threshold: " + str(threshold))
     plt.imshow(binary_image, cmap="gray")
     plt.show()
@@ -155,15 +159,22 @@ def main():
 
     # Calculate the in between class variance
     between_class_variance_ = between_class_variance(global_variance_, mg, p, i, counts)
-    between_class_variance_max = np.array(between_class_variance_).argmax()
-    print(f'In between class variance is maximal in bin {between_class_variance_max}')
-    plt.plot(between_class_variance_)
-    plt.title(f'In between class variance is maximal in bin {between_class_variance_max}')
+    # Use .max() for the value not .argmax() which returns the index.
+    between_class_variance_max = np.array(between_class_variance_).max()
+    print(f'In between class variance is maximal in bin {bin}: {between_class_variance_max}')
+    plt.plot(np.arange(0, 128), between_class_variance_ / between_class_variance_max, color='green')
+    plt.axvline(bin, color='red')
+    plt.title(f'In between class variance is maximal in bin {bin}: {between_class_variance_max}')
+    plt.show()
+
+    plt.axvline(threshold, color='red')
+    plt.hist(image.ravel(), bins=n_bins)
+    plt.title(f'Histogram with threshold at {threshold}')
     plt.show()
 
     # Calculate the separability
     separability = between_class_variance_max / global_variance_
-    print('Separability', separability)
+    print('Separability = Between class variance / Global class variance: ', separability)
 
 
 
