@@ -17,11 +17,20 @@ def display_image(image):
     plt.show()
     return image
 
-def basic_thresholding(image, threshold):
-    # Make all pixels < threshold black
-    bin_img = (image > threshold)
-
-    return bin_img, threshold
+def basic_thresholding(image, e):
+    T0 = (image.max() + image.mean()) / 2
+    T0 = 190
+    Tdiff = 10
+    G1, G2 = 0,0
+    while (Tdiff > e):
+        G1 = (image <= T0) * image
+        G2 = (image > T0) * image
+        m1 = G1[G1 > 0].mean()
+        m2 = G2[G2 > 0].mean()
+        T1 = 0.5 * (m1 + m2)
+        Tdiff = np.abs(T0 - T1)
+        T0 = T1
+    return T0, G1, G2
 
 
 def make_histogram(image):
@@ -106,13 +115,8 @@ def my_otsu(image, n_bins, counts, bin_centers):
 
 def main():
     # Choose one of the images below
-    image = "thGonz.tif"
-    # image = "binary_test_image.png"
-
-    # Specify a threshold 0-255 for the basic threshold method
-    # Calculated for binary_test_image.png: 0.56640625
-    # Calculated for thGonz - tif: 199.27734375
-    threshold_basic_method = 199.27734375
+    # image = "thGonz.tif"
+    image = "binary_test_image.png"
 
     image = open_image(image)
     display_image(image)
@@ -123,9 +127,19 @@ def main():
     n_bins, counts, bin_centers = make_histogram(image)
 
     # Basic thresholding method
-    binary_image, threshold = basic_thresholding(image, threshold_basic_method )
-    plt.imshow(binary_image, cmap="gray")
-    plt.title("Basic Thresholding: Output Threshold: " + str(threshold_basic_method))
+    e = 3
+    T, G1, G2 = basic_thresholding(image, e)
+    print(T)
+    print(G1.shape, G2.shape)
+    fig, ax = plt.subplots(2,2)
+    ax[0,0].set_title(str(T))
+    ax[0,0].imshow(G1)
+    ax[0,1].hist(G1)
+    ax[1,0].imshow(G2)
+    ax[1,1].hist(G2)
+    G2[G2 > 0] = 1
+    plt.figure()
+    plt.imshow(G2, cmap='gray')
     plt.show()
 
 
