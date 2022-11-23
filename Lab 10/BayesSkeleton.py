@@ -2,6 +2,9 @@ import numpy as np
 
 import pickle
 
+from matplotlib import pyplot as plt
+from skimage import metrics
+
 
 class Data:
     def __init__(self, feature, label):
@@ -40,10 +43,10 @@ def evaluateCost(feature_vector, m, c):
     # m     mean of the feature vectors for a class
     # c     covariance of the feature vectors of a class
     # Output
-    #   some scalar proportional to the logarithm fo the probability d_j(feature_vector)
-    pass
-    pass
-
+    #   some scalar proportional to the logarithm of the probability d_j(feature_vector)
+    #dj
+    scalar = (-np.ln(np.abs(c)) - (feature_vector-m).T * np.linalg.inv(c) * (feature_vector-m))
+    return scalar
 
 def classify(test_data, mean, covariance):
     pass
@@ -52,9 +55,10 @@ def classify(test_data, mean, covariance):
 
 
 def computeConfusionMatrix(decisions, test_data):
-    pass
-    pass
-    pass
+    confusion_matrix = metrics.confusion_matrix(test_data, decisions)
+    cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix=confusion_matrix, display_labels=[False, True])
+    cm_display.plot()
+    plt.show()
 
 
 def main():
@@ -64,6 +68,8 @@ def main():
     # Train: Compute mean and covariance for each object class from {0,1,2,3}
     # returns one list entry per object class
     mean, covariance = train(train_data)
+
+    # scalar = evaluateCost(feature_vector, mean, covariance)
     
     # Decide: Compute decision for each feature vector from test_data
     # return a list of class indices from the set {0,1,2,3}

@@ -1,7 +1,6 @@
-import time
+import pickle
 
 import numpy as np
-import pickle
 
 
 class Data:
@@ -26,13 +25,16 @@ def train(train_data):
     # covariance ... list with one entry per class
     #          each entry is the covariance of the feature vectors of a class
     labels, features = prepare_data(train_data)
+
     mean = []
     covariance = []
     for label in labels:
         feature_matrix = np.array(features[label])
-        print(feature_matrix)
-        pass
-        pass
+        mean.append(np.mean(feature_matrix))
+        covariance.append(np.sum((feature_matrix - np.mean(feature_matrix))@(feature_matrix - np.mean(feature_matrix)).T))
+    print('Labels: ', labels)
+    print('Mean per label: ',mean)
+    print('Covariance per label: ', covariance)
     return mean, covariance
 
 
@@ -42,9 +44,10 @@ def evaluateCost(feature_vector, m, c):
     # m     mean of the feature vectors for a class
     # c     covariance of the feature vectors of a class
     # Output
-    #   some scalar proportional to the logarithm fo the probability d_j(feature_vector)
+    #   some scalar proportional to the logarithm for the probability d_j(feature_vector)
+    scalar = 0
     pass
-    pass
+    return scalar
 
 
 def classify(test_data, mean, covariance):
@@ -65,17 +68,16 @@ def main():
 
     # Train: Compute mean and covariance for each object class from {0,1,2,3}
     # returns one list entry per object class
-    print('Hallo')
     mean, covariance = train(train_data)
     
     # Decide: Compute decision for each feature vector from test_data
     # return a list of class indices from the set {0,1,2,3}
     decisions = classify(test_data, mean, covariance)
-    print(decisions)
+    print('Decisions:\n', decisions)
     
     # Copmute the confusion matrix
     confusion_matrix = computeConfusionMatrix(decisions, test_data)
-    print(confusion_matrix)
+    print('Confusoin matrix:\n', confusion_matrix)
 
 if __name__ == "__main__":
     main()
