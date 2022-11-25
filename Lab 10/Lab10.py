@@ -1,6 +1,7 @@
 import pickle
 
 import numpy as np
+from matplotlib import pyplot as plt
 
 
 class Data:
@@ -45,10 +46,8 @@ def evaluateCost(feature_vector, m, c):
     # c     covariance of the feature vectors of a class
     # Output
     #   some scalar proportional to the logarithm for the probability d_j(feature_vector)
-    scalar = 0
-    pass
+    scalar = (-np.ln(np.abs(c)) - (feature_vector-m).T * np.linalg.inv(c) * (feature_vector-m))
     return scalar
-
 
 def classify(test_data, mean, covariance):
     pass
@@ -56,10 +55,11 @@ def classify(test_data, mean, covariance):
     pass
 
 
-def computeConfusionMatrix(decisions, test_data):
-    pass
-    pass
-    pass
+def computeConfusionMatrix(decisions, test_data, metrics=None):
+        confusion_matrix = metrics.confusion_matrix(test_data, decisions)
+        cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix=confusion_matrix, display_labels=[False, True])
+        cm_display.plot()
+        plt.show()
 
 
 def main():
