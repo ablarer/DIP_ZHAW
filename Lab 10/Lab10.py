@@ -1,7 +1,6 @@
 import pickle
 
 import numpy as np
-from matplotlib import pyplot as plt
 
 
 class Data:
@@ -26,17 +25,28 @@ def train(train_data):
     # covariance ... list with one entry per class
     #          each entry is the covariance of the feature vectors of a class
     labels, features = prepare_data(train_data)
+    means = []
+    covariances = []
 
-    mean = []
-    covariance = []
     for label in labels:
         feature_matrix = np.array(features[label])
-        mean.append(np.mean(feature_matrix))
-        covariance.append(np.sum((feature_matrix - np.mean(feature_matrix))@(feature_matrix - np.mean(feature_matrix)).T))
-    print('Labels: ', labels)
-    print('Mean per label: ',mean)
-    print('Covariance per label: ', covariance)
-    return mean, covariance
+        mean_vector = feature_matrix.mean(axis=0)
+
+        covariance_matrix = np.zeros((feature_matrix.shape[1], feature_matrix.shape[1]))
+        for feature_vector in feature_matrix:
+            q = feature_vector - mean_vector
+            covariance_matrix += q * np.reshape(q, (q.shape[0], 1))
+        N = feature_matrix.shape[0]
+        covariance_matrix = 1 / (N - 1) * covariance_matrix
+
+        means.append(mean_vector)
+
+        covariances.append(covariance_matrix)
+        # Degrade the classifier by assuming that the covariance matrix is the unity matrix.
+        # As a result you should observe misclassifications:
+        # covariances.append(np.identity(covariance_matrix.shape[0]))
+
+    return means, covariances
 
 
 def evaluateCost(feature_vector, m, c):
@@ -46,38 +56,90 @@ def evaluateCost(feature_vector, m, c):
     # c     covariance of the feature vectors of a class
     # Output
     #   some scalar proportional to the logarithm for the probability d_j(feature_vector)
-    scalar = (-np.ln(np.abs(c)) - (feature_vector-m).T * np.linalg.inv(c) * (feature_vector-m))
-    return scalar
+    vec = feature_vector - m
+    if np.linalg.det(c) == 0:
+        raise ValueError("Covariance matrix is singular and therefore can't be inverted: " + str(c))
+    return -np.log(np.linalg.det(c)) - vec.T @ np.linalg.inv(c) @ vec
+
 
 def classify(test_data, mean, covariance):
-    pass
-    pass
-    pass
+    decisions = []
+
+    for data in test_data:
+        decision_cost = None
+        decision_label = None
+
+        for label in range(0, len(mean)):
+            cost = evaluateCost(data.feature, mean[label], covariance[label])
+
+            if decision_cost is None or decision_cost < cost:
+                decision_cost = cost
+                decision_label = label
+
+        decisions.append(decision_label)
+
+    return decisions
 
 
-def computeConfusionMatrix(decisions, test_data, metrics=None):
-        confusion_matrix = metrics.confusion_matrix(test_data, decisions)
-        cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix=confusion_matrix, display_labels=[False, True])
-        cm_display.plot()
-        plt.show()
+def computeConfusionMatrix(decisions, test_data):
+    labels, _ = prepare_data(test_data)
+    confusion_matrix = np.zeros((labels.shape[0], labels.shape[0]))
+
+    for i, data in enumerate(test_data):
+        actual = data.label
+        predicted = decisions[i]
+
+        confusion_matrix[predicted, actual] += 1
+
+    return confusion_matrix
 
 
 def main():
-    train_data = pickle.load(open("./train_data.pkl", "rb"))
-    test_data = pickle.load(open("./test_data.pkl", "rb"))
+    train_data = pickle.load(open("train_data.pkl", "rb"))
+    test_data = pickle.load(open("test_data.pkl", "rb"))
 
     # Train: Compute mean and covariance for each object class from {0,1,2,3}
     # returns one list entry per object class
     mean, covariance = train(train_data)
-    
+
     # Decide: Compute decision for each feature vector from test_data
     # return a list of class indices from the set {0,1,2,3}
-    decisions = classify(test_data, mean, covariance)
-    print('Decisions:\n', decisions)
-    
-    # Copmute the confusion matrix
+    decisions = np.array(classify(test_data, mean, covariance))
+    actual = np.array([dat.label for dat in test_data])
+    accuracy = np.sum(actual == decisions) / decisions.shape[0]
+    print("Decisions:\t" + str(decisions))
+    print("Actual:\t\t" + str(actual))
+    print("Accuracy:\t" + str(accuracy))
+
+    # Compute the confusion matrix
     confusion_matrix = computeConfusionMatrix(decisions, test_data)
-    print('Confusoin matrix:\n', confusion_matrix)
+    print("Confusion Matrix:\n" + str(confusion_matrix))
+
 
 if __name__ == "__main__":
     main()
+
+#
+# Output:
+# -----------------------------------------------------------
+# Decisions:	[0 0 0 0 0 1 1 1 1 1 2 2 2 2 2 3 3 3 3 3]
+# Actual:		[0 0 0 0 0 1 1 1 1 1 2 2 2 2 2 3 3 3 3 3]
+# Accuracy:	1.0
+# Confusion Matrix:
+# [[5. 0. 0. 0.]
+#  [0. 5. 0. 0.]
+#  [0. 0. 5. 0.]
+#  [0. 0. 0. 5.]]
+#
+# Degrade the classifier by assuming that the covariance matrix is the unity matrix.
+# As a result you should observe wrong classifications:
+#
+# Decisions:	[0 0 2 0 0 1 1 1 1 1 2 0 0 2 3 2 3 0 3 0]
+# Actual:		[0 0 0 0 0 1 1 1 1 1 2 2 2 2 2 3 3 3 3 3]
+# Accuracy:	0.65
+# Confusion Matrix:
+# [[4. 0. 2. 2.]
+#  [0. 5. 0. 0.]
+#  [1. 0. 2. 1.]
+#  [0. 0. 1. 2.]]
+#
